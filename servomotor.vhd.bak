@@ -1,0 +1,51 @@
+Library IEEE;
+Use IEEE.Std_logic_1164.all;
+Use IEEE.Std_logic_arith.all;
+Use IEEE.Std_logic_unsigned.all;
+Entity servomotor is
+Port (reloj_sv : in std_logic;
+Pini, Pfin, Inc, Dec : in std_logic;
+control : out std_logic);
+
+End entity;
+Architecture Behavioral of servomotor is
+Component divisor is
+Port (reloj : in std_logic;
+reloj_divclk: out std_logic);
+
+End Component;
+Component pwm is
+Port (reloj_pwm : in std_logic;
+D: in std_logic_vector(7 downto 0);
+S: out std_logic);
+
+End Component;
+Signal reloj_serv: std_logic;
+Signal ancho : std_logic_vector(7 downto 0) := X"0F";
+Begin
+U1 : divisor Port map(reloj_sv, reloj_serv);
+U2: pwm Port map(reloj_serv, ancho, control);
+Process(reloj_serv, Pini, Pfin, Inc, Dec)
+Variable valor : std_logic_vector(7 downto 0) := X"0F";
+Variable cuenta : integer range 0 to 1023 := 0;
+Begin
+
+If reloj_serv= '1' and reloj_serv'event then
+If (cuenta > 0) then
+cuenta := cuenta - 1;
+Else
+If Pini = '0' then
+valor := X"0D";
+Elsif Pfin = '0' then
+valor := X"18";
+Elsif Inc = '0' and valor < X"18" then
+valor := valor + 1;
+Elsif Dec = '0' and valor > X"0D" then
+valor := valor - 1;
+End if;
+cuenta := 1023
+End if;
+End if;
+ancho <= valor;
+End process;
+End behavioral
